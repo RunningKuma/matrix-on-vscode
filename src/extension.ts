@@ -2,7 +2,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-import { MatrixManager } from './MatrixManager';
+import { matrixManager } from './MatrixManager';
+import { globalState } from './globalState';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -11,6 +12,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "matrix-on-vscode" is now active!');
+
+	globalState.initialize(context);
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -29,11 +32,12 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage(`Current time is: ${time}`);		
 	});
 
+	const signInCommand = vscode.commands.registerCommand('matrix-on-vscode.signin', () => matrixManager.signIn());
+
 	context.subscriptions.push(
 		disposable,
 		showtime,
-		vscode.window.registerCommand('matrix-on-vscode.signin', () => MatrixManager.signIn()),
-
+		signInCommand,
 	);
 }
 
