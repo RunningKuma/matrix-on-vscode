@@ -35,12 +35,14 @@ class MatrixManager {
             const cookieToPersist = this.pickCookie(result.cookies, cookie);
             await this.updateSession(cookieToPersist, result.data);
 
+            vscode.window.showInformationMessage(globalState.getCookie() || "无 Cookie 信息");
             vscode.window.showInformationMessage("登录成功");
         } catch (error) {
             this.handleError(error);
         }
     }
 
+    //暂时弃用
     private async signInWithCredentials(): Promise<void> {
         const credentials = await this.uiService.promptForCredentials();
         if (!credentials) {
@@ -51,18 +53,19 @@ class MatrixManager {
             const result = await vscode.window.withProgress<AuthResult>({
                 location: vscode.ProgressLocation.Notification,
                 title: "正在登录 Matrix..."
-            }, () => this.authService.loginWithCredentials(credentials.username, credentials.password, credentials.captcha));
+            }, () => this.authService.loginWithCredentials(credentials.username, credentials.password));
 
             const cookieToPersist = this.pickCookie(result.cookies);
             await this.updateSession(cookieToPersist, result.data, credentials.username);
 
-            if(globalState.getUserStatus()?.isVerified == false) {
-                vscode.window.showInformationMessage("请先完成身份验证");
-                return;
-            }
+            // if(globalState.getUserStatus()?.isVerified == false) {
+            //     vscode.window.showInformationMessage("请先完成身份验证");
+            //     return;
+            // }
             //TODO:还需要完成验证工作，很奇怪好像正常登录也不行...
             //似乎登录需要连着session一起发过去...
-            // vscode.window.showInformationMessage(JSON.stringify(result.data));
+            vscode.window.showInformationMessage(JSON.stringify(result.data));
+            // vscode.window.showInformationMessage(result.cookies?.toString() || "无 Cookie 信息");
             vscode.window.showInformationMessage("登录成功");
         } catch (error) {
             this.handleError(error);

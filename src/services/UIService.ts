@@ -11,11 +11,11 @@ export interface CredentialsInput {
 export class UIService {
     public async pickLoginMethod(): Promise<LoginMethod | undefined> {
         const items: vscode.QuickPickItem[] = [
-            {
-                label: "通过用户名登录",
-                detail: "使用 Matrix 用户名进行登录",
-                description: "UserLogin"
-            },
+            // {
+            //     label: "通过用户名登录",
+            //     detail: "使用 Matrix 用户名进行登录",
+            //     description: "UserLogin"
+            // },
             {
                 label: "通过 Cookie 登录",
                 detail: "使用 Matrix Cookie 进行登录",

@@ -26,6 +26,23 @@
         "title": "Matrix: Sign In"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "matrixView",
+          "title": "Matrix",
+          "icon": "resources/logo.png"
+        }
+      ]
+    },
+    "views": {
+      "matrixView": [
+        {
+          "id": "matrixExplorerView",
+          "name": "Problems"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "matrix-on-vscode.helloWorld",
@@ -94,5 +111,8 @@
         "group": "navigation"
       }
     ]
+  },
+  "dependencies": {
+    "js-base64": "^3.7.8"
   }
 }

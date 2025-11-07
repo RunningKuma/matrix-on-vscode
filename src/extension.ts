@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 
 import { matrixManager } from './MatrixManager';
 import { globalState } from './globalState';
+import { matrixTreeDataProvider } from './sidebar/MatrixTreeDataProvider';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -30,6 +31,12 @@ export function activate(context: vscode.ExtensionContext) {
 		const now = new Date();
 		const time = now.toLocaleTimeString();
 		vscode.window.showInformationMessage(`Current time is: ${time}`);		
+	});
+	
+	//FIXME: 没法显示侧边栏
+	vscode.window.createTreeView('matrixSidebar', {
+		treeDataProvider: matrixTreeDataProvider,
+		showCollapseAll: true,
 	});
 
 	const signInCommand = vscode.commands.registerCommand('matrix-on-vscode.signin', () => matrixManager.signIn());

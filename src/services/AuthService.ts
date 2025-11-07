@@ -1,9 +1,16 @@
 import fetch, { type Response } from "node-fetch";
-
+import { encodeBody, decodeBody } from "../util/body-encode";
 export interface AuthResult<TData = unknown> {
     data: TData | undefined;
     cookies: string[];
 }
+
+export interface UserData {
+    //TODO: 设置用户数据结构
+}
+
+
+
 
 export class AuthService {
     private readonly baseUrl: string;
@@ -12,11 +19,22 @@ export class AuthService {
         this.baseUrl = baseUrl.replace(/\/$/, "");
     }
 
-    public async loginWithCredentials(username: string, password: string, captcha?: string): Promise<AuthResult> {
+    public async loginWithCredentials(username: string, password: string): Promise<AuthResult> {
+        const res_for_cookie: Response = await fetch(`${this.baseUrl}/api/users/login`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        });
+        const cookies: string[] = this.extractCookies(res_for_cookie);
+         
+
+        const encodedBody = await encodeBody("aes-256-gcm", { username, password });
         const response = await fetch(`${this.baseUrl}/api/users/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, captcha })
+            headers: { 
+                "Content-Type": "application/json",
+                // Cookie: cookies.join("; ")
+            },
+            body: encodedBody ?? undefined,
         });
 
         return this.handleResponse(response);
