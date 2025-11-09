@@ -6,7 +6,7 @@ const UserStatusKey = 'matrix_user_status';
 export type UserDataType = {
     isSignedIn: boolean;
     username: string | null;
-    isVerified?: boolean;
+    //TODO:以后可能还会有更多用户相关的信息需要存储
 }
 
 class GlobalState {

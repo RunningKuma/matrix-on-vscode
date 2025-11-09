@@ -8,7 +8,56 @@ export interface AuthResult<TData = unknown> {
 export interface UserData {
     //TODO: 设置用户数据结构
 }
-
+export interface UserData {
+    user_id: number;
+    nickname: string;
+    realname: string;
+    username: string;
+    is_valid: number;
+    homepage: string;
+    phone: string;
+    email: string;
+    user_addition: {
+        editor_config: {
+            assignmentInfoWidth: number;
+            clangFormatStyle: string;
+            codeEditorTheme: string;
+            formatOnPaste: boolean;
+            formatOnType: boolean;
+            insertSpaces: boolean;
+            playgroundWidth: number;
+            reverse: boolean;
+            ruffConfig: string;
+            tabSize: number;
+        };
+    };
+    student_id: string;
+    academy: string;
+    specialty: string;
+    mail_config: {
+        course: boolean;
+        course_assignment: boolean;
+        exam: boolean;
+    };
+    admin: {
+        check_lib: boolean;
+        check_lib_due: string;
+        create_course: boolean;
+        create_course_due: string;
+        create_exam: boolean;
+        create_exam_due: string;
+        create_lib: boolean;
+        create_lib_due: string;
+        create_user: boolean;
+        create_user_due: string;
+        is_admin: boolean;
+        is_admin_due: string;
+    };
+    isInLib: boolean;
+    canCreateLib: boolean;
+    canCreateExam: boolean;
+    weakPswCheck: string;
+}
 
 
 

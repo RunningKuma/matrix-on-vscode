@@ -15,14 +15,17 @@
     "commands": [
       {
         "command": "matrix-on-vscode.helloWorld",
+        "category": "matrix-on-vscode",
         "title": "Hello VScode"
       },
       {
         "command": "matrix-on-vscode.showTime",
+        "category": "matrix-on-vscode",
         "title": "Show Time"
       },
       {
         "command": "matrix-on-vscode.signin",
+        "category": "matrix-on-vscode",
         "title": "Matrix: Sign In"
       }
     ],
@@ -31,7 +34,7 @@
         {
           "id": "matrixView",
           "title": "Matrix",
-          "icon": "resources/logo.png"
+          "icon": "resources/favicon.svg"
         }
       ]
     },
@@ -39,10 +42,11 @@
       "matrixView": [
         {
           "id": "matrixExplorerView",
+          "icon": "resources/login.svg",
           "name": "Problems"
         }
       ]
-    },
+    }, 
     "keybindings": [
       {
         "command": "matrix-on-vscode.helloWorld",
@@ -113,6 +117,7 @@
     ]
   },
   "dependencies": {
-    "js-base64": "^3.7.8"
+    "js-base64": "^3.7.8",
+    "prettier": "^3.6.2"
   }
 }

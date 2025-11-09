@@ -8,12 +8,9 @@ import * as vscode from "vscode";
 import { globalState } from "../globalState";
 import { matrixManager } from "../MatrixManager";
 import { MatrixNode } from "./MatrixNode";
+import { defaultCourse } from "../shared";
 
 
-//TODO: 实现侧边栏数据提供：
-// 1. 规定好数据结构 MatrixNode
-// 2. 实现 MatrixTreeDataProvider 类，继承 vscode.TreeDataProvider<MatrixNode>
-// 3. 在 extension.ts 中注册 TreeDataProvider
 export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNode> {
    public getTreeItem(element: MatrixNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
         // throw new Error("Method not implemented.");
@@ -26,12 +23,23 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
                     command: "matrix.signIn"
                 }
             };
-        }  
-        return element;  
+        }
+        return element;
     }
-    public getChildren(element?: MatrixNode | undefined): vscode.ProviderResult<MatrixNode[]> {
-        throw new Error("Method not implemented.");
+    
+    getChildren(element?: MatrixNode | undefined): vscode.ProviderResult<MatrixNode[]> {
+        if (!matrixManager.isSignedIn()) {
+            return [ //实际这里应该还需要定好数据结构之类的
+            new MatrixNode(
+                Object.assign({}, defaultCourse, {
+                    course_id: -1,
+                    title: "请先登录 Matrix",
+                }),
+                false
+            ),
+        ];
     }
+}
 }
 
 export const matrixTreeDataProvider = new MatrixTreeDataProvider();

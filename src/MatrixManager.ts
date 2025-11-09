@@ -7,6 +7,12 @@ class MatrixManager {
     private readonly authService = new AuthService();
     private readonly uiService = new UIService();
 
+    public isSignedIn(): boolean {
+        const userStatus = globalState.getUserStatus();
+        return userStatus?.isSignedIn === true;
+    }
+
+    //signIN 的主逻辑
     public async signIn(): Promise<void> {
         const method = await this.uiService.pickLoginMethod();
         if (!method) {
@@ -35,7 +41,8 @@ class MatrixManager {
             const cookieToPersist = this.pickCookie(result.cookies, cookie);
             await this.updateSession(cookieToPersist, result.data);
 
-            vscode.window.showInformationMessage(globalState.getCookie() || "无 Cookie 信息");
+            vscode.window.showInformationMessage(JSON.stringify(result.data));
+            vscode.window.showInformationMessage(JSON.stringify(globalState.getUserStatus()) || "无用户信息");
             vscode.window.showInformationMessage("登录成功");
         } catch (error) {
             this.handleError(error);
@@ -74,9 +81,8 @@ class MatrixManager {
 
     private pickCookie(cookies: string[] | undefined, fallback?: string): string | undefined {
         if (cookies && cookies.length > 0) {
-            return cookies[0];
+            return cookies.join("; ");
         }
-
         return fallback;
     }
 
@@ -85,14 +91,15 @@ class MatrixManager {
             await globalState.setCookie(cookie);
         }
 
-        const username = typeof data?.username === "string" ? data.username : fallbackUsername ?? null;
-        const isVerified = typeof data?.isVerified === "boolean" ? data.isVerified : undefined;
+        //获取用户名和登录状态
+        const username = typeof data?.nickname === "string" ? data.nickname : null;
+        const is_signin = typeof data?.is_valid === "number" ? true : false;
 
         await globalState.setUserStatus({
-            isSignedIn: true,
-            username,
-            isVerified
+            isSignedIn: is_signin,
+            username
         });
+        //感觉globalState存储的东西有点少了...
     }
 
     private handleError(error: unknown): void {

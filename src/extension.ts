@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "matrix-on-vscode" is now active!');
 
 	globalState.initialize(context);
-
+	
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -32,14 +32,20 @@ export function activate(context: vscode.ExtensionContext) {
 		const time = now.toLocaleTimeString();
 		vscode.window.showInformationMessage(`Current time is: ${time}`);		
 	});
-	
+
 	//FIXME: 没法显示侧边栏
-	vscode.window.createTreeView('matrixSidebar', {
+	//貌似需要先register
+	vscode.window.registerTreeDataProvider('matrixExplorerView', matrixTreeDataProvider);
+
+	vscode.window.createTreeView('matrixExplorerView', {
 		treeDataProvider: matrixTreeDataProvider,
 		showCollapseAll: true,
 	});
 
-	const signInCommand = vscode.commands.registerCommand('matrix-on-vscode.signin', () => matrixManager.signIn());
+	const signInCommand = vscode.commands.registerCommand(
+        "matrix-on-vscode.signin",
+        () => matrixManager.signIn()
+    );
 
 	context.subscriptions.push(
 		disposable,
