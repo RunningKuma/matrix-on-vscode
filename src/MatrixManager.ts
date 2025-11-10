@@ -92,8 +92,8 @@ class MatrixManager {
         }
 
         //获取用户名和登录状态
-        const username = typeof data?.nickname === "string" ? data.nickname : null;
-        const is_signin = typeof data?.is_valid === "number" ? true : false;
+        const username = typeof data.data?.nickname === "string" ? data.data.nickname : null;
+        const is_signin = typeof data.data?.is_valid === "number" ? true : false;
 
         await globalState.setUserStatus({
             isSignedIn: is_signin,

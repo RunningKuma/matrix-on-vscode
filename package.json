@@ -27,6 +27,16 @@
         "command": "matrix-on-vscode.signin",
         "category": "matrix-on-vscode",
         "title": "Matrix: Sign In"
+      },
+      {
+        "command": "matrix-on-vscode.refreshCourses",
+        "category": "matrix-on-vscode",
+        "title": "Matrix: Refresh Courses"
+      },
+      {
+        "command": "matrix-on-vscode.refreshCourseAssignments",
+        "category": "matrix-on-vscode",
+        "title": "Matrix: Refresh Assignments"
       }
     ],
     "viewsContainers": {
@@ -66,6 +76,21 @@
           "when": "editorFocus",
           "command": "matrix-on-vscode.showTime",
           "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "matrix-on-vscode.refreshCourses",
+          "when": "view == matrixExplorerView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "matrix-on-vscode.refreshCourseAssignments",
+          "icon": "resources/refresh.svg",
+          "when": "view == matrixExplorerView && viewItem == matrix.course",
+          "group": "inline"
         }
       ]
     }

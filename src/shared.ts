@@ -1,21 +1,5 @@
-import * as vscode from "vscode";
-
-export interface Course {
-    course_id: number;
-    name?: string;
-
-}
-
-export const defaultCourse: Course = {
-    course_id: -1,
-    name: "默认课程",
-
-};
-
-export interface Assignment {
-    ca_id?: number; // course 专用
-    course_id?: number; // course
-}
+export { defaultAssignment, type AssignmentSummary } from "./models/Assignment";
+export { defaultCourse, type CourseSummary } from "./models/Course";
 
 /*一些从client和course薅下来的类型，可以参考
 

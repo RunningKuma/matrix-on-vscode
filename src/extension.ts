@@ -33,24 +33,42 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage(`Current time is: ${time}`);		
 	});
 
-	//FIXME: 没法显示侧边栏
-	//貌似需要先register
-	vscode.window.registerTreeDataProvider('matrixExplorerView', matrixTreeDataProvider);
-
-	vscode.window.createTreeView('matrixExplorerView', {
+	const treeView = vscode.window.createTreeView('matrixExplorerView', {
 		treeDataProvider: matrixTreeDataProvider,
 		showCollapseAll: true,
 	});
 
 	const signInCommand = vscode.commands.registerCommand(
-        "matrix-on-vscode.signin",
-        () => matrixManager.signIn()
-    );
+		"matrix-on-vscode.signin",
+		async () => {
+			await matrixManager.signIn();
+			matrixTreeDataProvider.refresh({ force: true });
+		}
+	);
+
+	const refreshCommand = vscode.commands.registerCommand(
+		"matrix-on-vscode.refreshCourses",
+		() => matrixTreeDataProvider.refresh({ force: true })
+	);
+
+	const refreshAssignmentsCommand = vscode.commands.registerCommand(
+		"matrix-on-vscode.refreshCourseAssignments",
+		(courseId?: number) => {
+			if (typeof courseId === "number") {
+				matrixTreeDataProvider.refreshAssignments(courseId);
+			} else {
+				matrixTreeDataProvider.refreshAssignments();
+			}
+		}
+	);
 
 	context.subscriptions.push(
 		disposable,
 		showtime,
 		signInCommand,
+		refreshCommand,
+		refreshAssignmentsCommand,
+		treeView,
 	);
 }
 
