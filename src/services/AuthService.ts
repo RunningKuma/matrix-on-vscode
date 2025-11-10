@@ -1,64 +1,10 @@
-import fetch, { type Response } from "node-fetch";
+import fetch, { Response } from "node-fetch";
 import { encodeBody, decodeBody } from "../util/body-encode";
+
 export interface AuthResult<TData = unknown> {
     data: TData | undefined;
     cookies: string[];
 }
-
-export interface UserData {
-    //TODO: 设置用户数据结构
-}
-export interface UserData {
-    user_id: number;
-    nickname: string;
-    realname: string;
-    username: string;
-    is_valid: number;
-    homepage: string;
-    phone: string;
-    email: string;
-    user_addition: {
-        editor_config: {
-            assignmentInfoWidth: number;
-            clangFormatStyle: string;
-            codeEditorTheme: string;
-            formatOnPaste: boolean;
-            formatOnType: boolean;
-            insertSpaces: boolean;
-            playgroundWidth: number;
-            reverse: boolean;
-            ruffConfig: string;
-            tabSize: number;
-        };
-    };
-    student_id: string;
-    academy: string;
-    specialty: string;
-    mail_config: {
-        course: boolean;
-        course_assignment: boolean;
-        exam: boolean;
-    };
-    admin: {
-        check_lib: boolean;
-        check_lib_due: string;
-        create_course: boolean;
-        create_course_due: string;
-        create_exam: boolean;
-        create_exam_due: string;
-        create_lib: boolean;
-        create_lib_due: string;
-        create_user: boolean;
-        create_user_due: string;
-        is_admin: boolean;
-        is_admin_due: string;
-    };
-    isInLib: boolean;
-    canCreateLib: boolean;
-    canCreateExam: boolean;
-    weakPswCheck: string;
-}
-
 
 
 export class AuthService {
@@ -100,7 +46,13 @@ export class AuthService {
 
         return this.handleResponse(response);
     }
-
+    
+    /**
+     * 将返回的信息拆解成为data和cookie
+     * @param {response} Response
+     * @returns {AuthResult}
+     */
+    
     private async handleResponse(response: Response): Promise<AuthResult> {
         const rawText = await response.text();
         if (!response.ok) {
@@ -113,7 +65,7 @@ export class AuthService {
             cookies: this.extractCookies(response)
         };
     }
-
+    
     private parseBody(rawText: string): any {
         if (!rawText) {
             return undefined;

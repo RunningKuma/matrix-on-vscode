@@ -3,7 +3,8 @@ export const COMMANDS = {
     SHOW_TIME: "matrix-on-vscode.showTime",
     SIGN_IN: "matrix-on-vscode.signin",
     REFRESH_COURSES: "matrix-on-vscode.refreshCourses",
-    REFRESH_ASSIGNMENTS: "matrix-on-vscode.refreshCourseAssignments"
+    REFRESH_ASSIGNMENTS: "matrix-on-vscode.refreshCourseAssignments",
+    PREVIEW_PROBLEM: "matrix-on-vscode.previewProblem"
 } as const;
 
 export const VIEWS = {

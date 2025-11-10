@@ -31,12 +31,19 @@
       {
         "command": "matrix-on-vscode.refreshCourses",
         "category": "matrix-on-vscode",
+        "icon": "$(refresh)",
         "title": "Matrix: Refresh Courses"
       },
       {
         "command": "matrix-on-vscode.refreshCourseAssignments",
         "category": "matrix-on-vscode",
+        "icon": "$(refresh)",
         "title": "Matrix: Refresh Assignments"
+      },
+      {
+        "command": "matrix-on-vscode.previewProblem",
+        "category": "matrix-on-vscode",
+        "title": "Matrix: Preview Assignment"
       }
     ],
     "viewsContainers": {
@@ -81,6 +88,7 @@
       "view/title": [
         {
           "command": "matrix-on-vscode.refreshCourses",
+          "icon": "resources/refresh.svg",
           "when": "view == matrixExplorerView",
           "group": "navigation"
         }
@@ -88,7 +96,6 @@
       "view/item/context": [
         {
           "command": "matrix-on-vscode.refreshCourseAssignments",
-          "icon": "resources/refresh.svg",
           "when": "view == matrixExplorerView && viewItem == matrix.course",
           "group": "inline"
         }

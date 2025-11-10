@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { COMMANDS } from "../constants";
 import { AssignmentSummary, CourseSummary } from "../shared";
 
 export abstract class MatrixNode extends vscode.TreeItem {
@@ -87,6 +88,11 @@ export class AssignmentNode extends MatrixNode {
         this.iconPath = this.resolveIcon(assignment);
         this.description = this.buildDescription(assignment);
         this.tooltip = this.buildTooltip(assignment);
+        this.command = {
+            command: COMMANDS.PREVIEW_PROBLEM,
+            title: "查看题目预览",
+            arguments: [assignment]
+        };
     }
 
     private resolveIcon(assignment: AssignmentSummary): vscode.ThemeIcon {
@@ -105,7 +111,7 @@ export class AssignmentNode extends MatrixNode {
         const parts: string[] = [];
 
         if (assignment.score !== undefined && assignment.maxScore !== undefined) {
-            const icon = assignment.isFullScore ? "$(check)" : "$(x)";
+            const icon = assignment.isFullScore ? "分数" : "$(x)";
             parts.push(`${icon} ${assignment.score}/${assignment.maxScore}`);
         }
 

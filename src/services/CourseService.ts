@@ -1,14 +1,16 @@
 import fetch, { type Response } from "node-fetch";
 import { decodeBody } from "../util/body-encode";
-import { AssignmentSummary, CourseSummary } from "../shared";
+import { AssignmentAttachment, AssignmentDetail, AssignmentSummary, CourseSummary } from "../shared";
 
+//TODO: 这个类里面太臃肿了，把assignment的一些方法拆出去
 export class CourseService {
     private readonly baseUrl: string;
 
     public constructor(baseUrl: string = "https://matrix.sysu.edu.cn") {
         this.baseUrl = baseUrl.replace(/\/$/, "");
-    }
+    }   
 
+    
     public async fetchCourses(cookie: string): Promise<CourseSummary[]> {
         if (!cookie) {
             throw new Error("当前未登录 Matrix");
@@ -47,6 +49,26 @@ export class CourseService {
         const assignments = this.normalizeAssignments(payload, courseId);
         console.log(`[Matrix][CourseService] Parsed ${assignments.length} assignment(s) for course ${courseId}.`);
         return assignments;
+    }
+
+    public async fetchAssignmentDetail(courseId: number, assignmentId: number, cookie: string): Promise<AssignmentDetail> {
+        if (!cookie) {
+            throw new Error("当前未登录 Matrix，无法获取题目详情");
+        }
+
+        console.log(`[Matrix][CourseService] Fetching assignment detail for course ${courseId}, assignment ${assignmentId}...`);
+        const response = await fetch(`${this.baseUrl}/api/courses/${courseId}/assignments/${assignmentId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Cookie: cookie
+            }
+        });
+
+        const payload = await this.parseResponse(response);
+        const detail = this.normalizeAssignmentDetail(payload, courseId, assignmentId);
+        console.log(`[Matrix][CourseService] Parsed assignment detail for course ${courseId}, assignment ${detail.id}.`);
+        return detail;
     }
 
     private async parseResponse(response: Response): Promise<any> {
@@ -166,6 +188,120 @@ export class CourseService {
         }
 
         return [];
+    }
+
+    private normalizeAssignmentDetail(payload: any, courseId: number, assignmentId: number): AssignmentDetail {
+        const entry = this.pickAssignmentDetail(payload);
+
+        if (!entry) {
+            console.warn(`[Matrix][CourseService] Assignment detail payload empty for course ${courseId}, assignment ${assignmentId}.`);
+            return {
+                id: assignmentId,
+                courseId,
+                title: `题目 ${assignmentId}`,
+                isFinished: false,
+                isFullScore: false
+            };
+        }
+
+        const summary = this.toAssignment(entry, courseId, 0);
+        const normalizedId = this.toNumber(entry?.ca_id ?? entry?.asgn_id ?? entry?.assignment_id ?? entry?.id, assignmentId);
+        const description = this.toOptionalString(entry?.description ?? entry?.content ?? entry?.body ?? entry?.desc ?? entry?.statement);
+        const attachments = this.extractAttachments(entry);
+
+        return {
+            ...summary,
+            id: normalizedId,
+            description: description ?? undefined,
+            attachments,
+            raw: entry
+        };
+    }
+
+    private pickAssignmentDetail(payload: any): any {
+        if (!payload) {
+            return undefined;
+        }
+
+        if (Array.isArray(payload)) {
+            return payload[0];
+        }
+
+        if (Array.isArray(payload?.data)) {
+            return payload.data[0];
+        }
+
+        if (payload?.data?.assignment) {
+            return payload.data.assignment;
+        }
+
+        if (payload?.data?.assignmentDetail) {
+            return payload.data.assignmentDetail;
+        }
+
+        if (payload?.data?.detail) {
+            return payload.data.detail;
+        }
+
+        if (payload?.assignment) {
+            return payload.assignment;
+        }
+
+        if (payload?.assignmentDetail) {
+            return payload.assignmentDetail;
+        }
+
+        if (payload?.detail) {
+            return payload.detail;
+        }
+
+        if (payload?.data) {
+            return payload.data;
+        }
+
+        return payload;
+    }
+
+    private extractAttachments(entry: any): AssignmentAttachment[] | undefined {
+        const buckets: any[] = [];
+        const candidates = [
+            entry?.files,
+            entry?.attachments,
+            entry?.resources,
+            entry?.materials,
+            entry?.config?.files,
+            entry?.config?.attachments
+        ];
+
+        for (const candidate of candidates) {
+            if (Array.isArray(candidate)) {
+                buckets.push(...candidate);
+            }
+        }
+
+        if (buckets.length === 0) {
+            return undefined;
+        }
+
+        const attachments: AssignmentAttachment[] = [];
+
+        for (const item of buckets) {
+            const name = this.toOptionalString(item?.name ?? item?.filename ?? item?.title ?? item?.label);
+            const url = this.toOptionalString(item?.url ?? item?.download_url ?? item?.link ?? item?.href);
+            const code = typeof item?.code === "string" ? item.code : undefined;
+
+            if (!name && !url && !code) {
+                continue;
+            }
+
+            attachments.push({
+                name: name ?? (url ? url : "未命名附件"),
+                url: url ?? undefined,
+                code
+            });
+        }
+
+        return attachments.length ? attachments : undefined;
     }
 
     private toAssignment(entry: any, courseId: number, index: number): AssignmentSummary {
