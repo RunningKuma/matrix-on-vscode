@@ -1,12 +1,3 @@
-export const COMMANDS = {
-    HELLO_WORLD: "matrix-on-vscode.helloWorld",
-    SHOW_TIME: "matrix-on-vscode.showTime",
-    SIGN_IN: "matrix-on-vscode.signin",
-    REFRESH_COURSES: "matrix-on-vscode.refreshCourses",
-    REFRESH_ASSIGNMENTS: "matrix-on-vscode.refreshCourseAssignments",
-    PREVIEW_PROBLEM: "matrix-on-vscode.previewProblem"
-} as const;
-
 export const VIEWS = {
     MATRIX_CONTAINER: "matrixView",
     MATRIX_EXPLORER: "matrixExplorerView"
@@ -28,3 +19,8 @@ export const TREE_LABELS = {
     GROUP_PENDING: "未完成题目",
     GROUP_COMPLETED: "已完成题目"
 } as const;
+
+export const BASEURL = {
+    STAGING: "https://staging.matrix.moe/",
+    PROD: "https://matrix.sysu.edu.cn/"
+}

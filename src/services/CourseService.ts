@@ -305,8 +305,8 @@ export class CourseService {
     }
 
     private toAssignment(entry: any, courseId: number, index: number): AssignmentSummary {
-        const id = this.toNumber(entry?.ca_id ?? entry?.asgn_id ?? entry?.assignment_id ?? entry?.id ?? index + 1, index + 1);
-        const title = this.toString(entry?.title ?? entry?.name, `题目 ${id}`);
+        const id = this.toNumber(entry?.ca_id ?? entry?.asgn_id ?? index + 1, index + 1);
+        const title = this.toString(entry?.title , `题目 ${id}`);
         const startAt = this.toOptionalString(entry?.startdate ?? entry?.start_at ?? entry?.startTime);
         const deadline = this.toOptionalString(entry?.enddate ?? entry?.due_at ?? entry?.deadline ?? entry?.endTime);
         const status = this.toOptionalString(entry?.status ?? entry?.state ?? (entry?.finished === true ? "finished" : undefined));

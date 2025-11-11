@@ -5,6 +5,7 @@ import { CourseService } from "../services/CourseService";
 import { AssignmentSummary, CourseSummary } from "../shared";
 import { AssignmentGroupNode, AssignmentNode, CategoryNode, CourseNode, InfoNode, MatrixNode } from "./MatrixNode";
 
+// 树形数据提供者，负责提供课程和题目的树形结构
 export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNode> {
     private readonly courseService = new CourseService();
     private readonly changeEmitter = new vscode.EventEmitter<MatrixNode | undefined>();
@@ -17,7 +18,7 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
 
     public readonly onDidChangeTreeData = this.changeEmitter.event;
 
-    public refresh(options?: { force?: boolean }): void {
+    public async refresh(options?: { force?: boolean }): Promise<void> {
         if (options?.force) {
             console.log("[Matrix][Tree] Forced refresh requested, clearing cached courses.");
             this.courses = [];
@@ -28,10 +29,14 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
         this.changeEmitter.fire(undefined);
     }
 
+    //必须的实现方法，
     public getTreeItem(element: MatrixNode): vscode.TreeItem {
         return element;
     }
 
+    /*
+        参考https://vscode.js.cn/api/extension-guides/tree-view#tree-data-provider
+    */
     public async getChildren(element?: MatrixNode): Promise<MatrixNode[]> {
         if (element instanceof CourseNode) {
             return [
@@ -72,6 +77,16 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
 
             return list.map((assignment) => new AssignmentNode(assignment));
         }
+        
+        //未登录状态时的显示
+        if (!matrixManager.isSignedIn()) {
+            return [
+                new InfoNode("未登录，点击登录", {
+                    command: "matrix-on-vscode.signin",
+                    iconId: "account"
+                })
+            ];
+        }
 
         if (element instanceof CategoryNode) {
             const filteredCourses = element.category === "ongoing"
@@ -92,14 +107,6 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
             return [];
         }
 
-        if (!matrixManager.isSignedIn()) {
-            return [
-                new InfoNode("未登录，点击登录", {
-                    command: "matrix-on-vscode.signin",
-                    iconId: "account"
-                })
-            ];
-        }
 
         if ((this.needsReload || this.courses.length === 0) && !this.loading) {
             console.log("[Matrix][Tree] Reloading courses before providing root items.");
@@ -129,6 +136,7 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
         ];
     }
 
+    
     private async loadCourses(): Promise<void> {
         const cookie = globalState.getCookie();
         if (!cookie) {
@@ -148,6 +156,11 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
         } catch (error) {
             this.courses = [];
             this.errorMessage = error instanceof Error ? error.message : String(error);
+            if(this.errorMessage.includes("未登录")) {
+                vscode.window.showInformationMessage("登录状态已过期，请重新登录");
+                await matrixManager.signOut();
+                this.refresh();
+            }
             console.error("[Matrix][Tree] Failed to load courses:", this.errorMessage);
         } finally {
             this.loading = false;

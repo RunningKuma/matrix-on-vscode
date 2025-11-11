@@ -9,9 +9,10 @@ export type UserDataType = {
     //TODO:以后可能还会有更多用户相关的信息需要存储
 }
 
+// 参考leetcode扩展写的，会保存cookie和用户状态
 class GlobalState {
     private context!: vscode.ExtensionContext;
-    private _state!: vscode.Memento;
+    private _state!: vscode.Memento; //代表全局状态存储，是持久化的
     private _cookie: string | undefined;
     private _userStatus: UserDataType | undefined;
 
@@ -48,6 +49,11 @@ class GlobalState {
     public clear(): any {  
         this._state.update(CookieKey, undefined);
         this._state.update(UserStatusKey, undefined);
+        this._cookie = undefined;
+        this._userStatus = {
+            isSignedIn: false,
+            username: null
+        };
     }
 
 }

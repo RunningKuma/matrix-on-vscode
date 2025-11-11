@@ -29,6 +29,12 @@
         "title": "Matrix: Sign In"
       },
       {
+        "command": "matrix-on-vscode.signout",
+        "category": "matrix-on-vscode",
+        "icon": "$(sign-out)",
+        "title": "Matrix: Sign Out"
+      },
+      {
         "command": "matrix-on-vscode.refreshCourses",
         "category": "matrix-on-vscode",
         "icon": "$(refresh)",
@@ -89,6 +95,11 @@
         {
           "command": "matrix-on-vscode.refreshCourses",
           "icon": "resources/refresh.svg",
+          "when": "view == matrixExplorerView",
+          "group": "navigation"
+        },
+        {
+          "command": "matrix-on-vscode.signout",
           "when": "view == matrixExplorerView",
           "group": "navigation"
         }

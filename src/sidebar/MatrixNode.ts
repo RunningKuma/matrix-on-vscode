@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { COMMANDS } from "../constants";
+
 import { AssignmentSummary, CourseSummary } from "../shared";
 
 export abstract class MatrixNode extends vscode.TreeItem {
@@ -21,6 +21,7 @@ export class CategoryNode extends MatrixNode {
     }
 }
 
+// 课程节点
 export class CourseNode extends MatrixNode {
     public readonly course: CourseSummary;
 
@@ -89,7 +90,7 @@ export class AssignmentNode extends MatrixNode {
         this.description = this.buildDescription(assignment);
         this.tooltip = this.buildTooltip(assignment);
         this.command = {
-            command: COMMANDS.PREVIEW_PROBLEM,
+            command: "matrix-on-vscode.previewProblem",
             title: "查看题目预览",
             arguments: [assignment]
         };
@@ -111,7 +112,7 @@ export class AssignmentNode extends MatrixNode {
         const parts: string[] = [];
 
         if (assignment.score !== undefined && assignment.maxScore !== undefined) {
-            const icon = assignment.isFullScore ? "分数" : "$(x)";
+            const icon = assignment.isFullScore ? "⭐" : "❌";
             parts.push(`${icon} ${assignment.score}/${assignment.maxScore}`);
         }
 
