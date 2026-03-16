@@ -1,5 +1,13 @@
 export { defaultAssignment, type AssignmentSummary, type AssignmentDetail, type AssignmentAttachment } from "./models/Assignment";
 export { defaultCourse, type CourseSummary } from "./models/Course";
+export {
+    type SourceFileForSubmission,
+    type SubmitCodeResult,
+    type SubmissionSummary,
+    type SubmissionDetail,
+    type PollSubmissionProgress,
+    type PollSubmissionResult
+} from "./models/Submission";
 
 /*一些从client和course薅下来的类型，可以参考
 

@@ -12,7 +12,12 @@ class MatrixManager {
 
     public isSignedIn(): boolean {
         const userStatus = globalState.getUserStatus();
-        return userStatus?.isSignedIn === true;
+        if (userStatus?.isSignedIn === true) {
+            return true;
+        }
+
+        // 兜底：如果用户状态未及时写入，但 Cookie 已存在，先允许数据层尝试拉取课程。
+        return Boolean(globalState.getCookie());
     }
 
     //signIN 的主逻辑
@@ -49,9 +54,8 @@ class MatrixManager {
             const cookieToPersist = this.pickCookie(result.cookies, cookie);
             await this.updateSession(cookieToPersist, result.data);
 
-            vscode.window.showInformationMessage(JSON.stringify(result.data));
-            vscode.window.showInformationMessage(JSON.stringify(globalState.getUserStatus()) || "无用户信息");
-            vscode.window.showInformationMessage("登录成功");
+            const username = globalState.getUserStatus()?.username;
+            vscode.window.showInformationMessage(username ? `登录成功：${username}` : "登录成功");
         } catch (error) {
             this.handleError(error);
         }
@@ -79,9 +83,8 @@ class MatrixManager {
             // }
             //TODO:还需要完成验证工作，很奇怪好像正常登录也不行...
             //似乎登录需要连着session一起发过去...
-            vscode.window.showInformationMessage(JSON.stringify(result.data));
-            // vscode.window.showInformationMessage(result.cookies?.toString() || "无 Cookie 信息");
-            vscode.window.showInformationMessage("登录成功");
+            const username = globalState.getUserStatus()?.username ?? credentials.username;
+            vscode.window.showInformationMessage(username ? `登录成功：${username}` : "登录成功");
         } catch (error) {
             this.handleError(error);
         }
@@ -102,15 +105,54 @@ class MatrixManager {
             await globalState.setCookie(cookie);
         }
 
-        //获取用户名和登录状态
-        const username = typeof data.data?.nickname === "string" ? data.data.nickname : null;
-        const is_signin = typeof data.msg === "string" && data.msg.includes("已登录") ? true : false;
+        const username = this.pickUsername(data, fallbackUsername);
+        const isSignedIn = this.resolveSignedIn(data, Boolean(cookie));
 
         await globalState.setUserStatus({
-            isSignedIn: is_signin,
+            isSignedIn,
             username
         });
         //感觉globalState存储的东西有点少了...
+    }
+
+    private pickUsername(data: any, fallbackUsername?: string): string | null {
+        const candidate = this.pickString(
+            data?.data?.nickname
+            ?? data?.data?.username
+            ?? data?.paramData?.user?.username
+            ?? data?.paramData?.user?.realname
+            ?? fallbackUsername
+        );
+
+        return candidate ?? null;
+    }
+
+    private resolveSignedIn(data: any, defaultValue: boolean): boolean {
+        const message = this.pickString(data?.msg)?.toLowerCase();
+        if (message && /(未登录|not\s*login|invalid\s*cookie|cookie.*invalid|expired|登录失效)/.test(message)) {
+            return false;
+        }
+
+        const status = this.pickString(data?.status)?.toLowerCase();
+        if (status) {
+            if (/^(ok|success)$/.test(status)) {
+                return true;
+            }
+
+            if (/(fail|error|unauthorized|forbidden|not\s*login|invalid)/.test(status)) {
+                return false;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private pickString(value: unknown): string | undefined {
+        if (typeof value === "string") {
+            const trimmed = value.trim();
+            return trimmed.length > 0 ? trimmed : undefined;
+        }
+        return undefined;
     }
 
     private handleError(error: unknown): void {

@@ -208,12 +208,24 @@ export class CourseService {
         const normalizedId = this.toNumber(entry?.ca_id ?? entry?.asgn_id ?? entry?.assignment_id ?? entry?.id, assignmentId);
         const description = this.toOptionalString(entry?.description ?? entry?.content ?? entry?.body ?? entry?.desc ?? entry?.statement);
         const attachments = this.extractAttachments(entry);
+        const languageOptions = this.extractStringList(
+            entry?.config?.language ?? entry?.config?.languages ?? entry?.language ?? entry?.languages
+        );
+        const submissionFiles = this.extractStringList(
+            entry?.config?.submission ?? entry?.config?.submit_files ?? entry?.submission ?? entry?.submit_files
+        );
+        const submitLimitation = this.toOptionalNumber(entry?.submit_limitation ?? entry?.submitLimitation);
+        const gradeAtEndRaw = this.toOptionalNumber(entry?.grade_at_end ?? entry?.gradeAtEnd);
 
         return {
             ...summary,
             id: normalizedId,
             description: description ?? undefined,
             attachments,
+            languageOptions,
+            submissionFiles,
+            submitLimitation: submitLimitation ?? undefined,
+            gradeAtEnd: gradeAtEndRaw === undefined ? undefined : gradeAtEndRaw !== 0,
             raw: entry
         };
     }
@@ -367,6 +379,18 @@ export class CourseService {
             return num;
         }
         return undefined;
+    }
+
+    private extractStringList(value: unknown): string[] | undefined {
+        if (!Array.isArray(value)) {
+            return undefined;
+        }
+
+        const list = value
+            .map((item) => this.toOptionalString(item))
+            .filter((item): item is string => Boolean(item));
+
+        return list.length > 0 ? list : undefined;
     }
 
     private resolveFinished(entry: any, status: string | undefined, deadline: string | undefined): boolean {

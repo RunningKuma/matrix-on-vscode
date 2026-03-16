@@ -3,6 +3,7 @@ import { globalState } from "../globalState";
 import { matrixManager } from "../MatrixManager";
 import { CourseService } from "../services/CourseService";
 import { AssignmentSummary, CourseSummary } from "../shared";
+import { normalizeErrorMessage } from "../util/error-message";
 import { AssignmentGroupNode, AssignmentNode, CategoryNode, CourseNode, InfoNode, MatrixNode } from "./MatrixNode";
 
 // 树形数据提供者，负责提供课程和题目的树形结构
@@ -59,7 +60,7 @@ export class MatrixTreeDataProvider implements vscode.TreeDataProvider<MatrixNod
 
             if (cache.error) {
                 return [
-                    new InfoNode(`题目加载失败：${JSON.parse(cache.error).msg}`, {
+                    new InfoNode(`题目加载失败：${normalizeErrorMessage(cache.error)}`, {
                         command: "matrix-on-vscode.refreshCourseAssignments",
                         arguments: [element.courseId],
                         iconId: "warning"

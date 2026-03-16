@@ -23,4 +23,4 @@ export const TREE_LABELS = {
 export const BASEURL = {
     STAGING: "https://staging.matrix.moe/",
     PROD: "https://matrix.sysu.edu.cn/"
-}
+};

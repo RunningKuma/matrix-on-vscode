@@ -100,5 +100,8 @@ export interface AssignmentAttachment {
 export interface AssignmentDetail extends AssignmentSummary {
   description?: string;
   attachments?: AssignmentAttachment[];
+  languageOptions?: string[];
+  submissionFiles?: string[];
+  submitLimitation?: number;
+  gradeAtEnd?: boolean;
 }
-

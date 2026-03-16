@@ -7,6 +7,7 @@ import { matrixManager } from "./MatrixManager";
 import { globalState } from "./globalState";
 import { matrixTreeDataProvider } from "./sidebar/MatrixTreeDataProvider";
 import { previewAssignment } from "./webview/assignmentPreview";
+import { openSubmissionPanel } from "./webview/submissionPanel";
 import { type AssignmentSummary } from "./shared";
 
 // This method is called when your extension is activated
@@ -46,6 +47,9 @@ export function activate(context: vscode.ExtensionContext): void {
 		}),
 		vscode.commands.registerCommand("matrix-on-vscode.previewProblem", async (assignment?: AssignmentSummary) => {
 			await previewAssignment(context, assignment);
+		}),
+		vscode.commands.registerCommand("matrix-on-vscode.submitCode", async (assignment?: unknown) => {
+			await openSubmissionPanel(context, assignment);
 		}),
 		vscode.window.createTreeView(VIEWS.MATRIX_EXPLORER, {
 			treeDataProvider: matrixTreeDataProvider,

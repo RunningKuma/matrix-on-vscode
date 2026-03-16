@@ -1,71 +1,64 @@
-# matrix-on-vscode README
+# Matrix on VS Code
 
-This is the README for your extension "matrix-on-vscode". After writing up a brief description, we recommend including the following sections.
+在 VS Code 侧边栏中查看 Matrix 课程与作业，支持 Cookie 登录、课程/题目树形浏览和作业详情预览。
 
-## Features
+## 功能
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Matrix 账号 Cookie 登录
+- 课程按「进行中 / 已结束」分组显示
+- 题目按「未完成 / 已完成」分组显示
+- 题目详情预览（Markdown 渲染 + 附件展示）
+- 编程题提交（代码输入、提交评测、结果轮询）
+- 课程和题目局部刷新
 
-For example if there is an image subfolder under your extension project workspace:
+## 本地开发
 
-\!\[feature X\]\(images/feature-x.png\)
+### 环境
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- Node.js 20+
+- pnpm
+- VS Code 1.99+
 
-## Requirements
+### 安装依赖
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+```bash
+pnpm install
+```
 
-## Extension Settings
+### 编译
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+```bash
+pnpm run compile
+```
 
-For example:
+### 调试扩展
 
-This extension contributes the following settings:
+1. 在此项目中按 `F5` 启动 `Run Extension`。
+2. 在新开的 Extension Host 窗口中打开 Matrix 侧边栏。
+3. 点击登录节点并输入 Cookie。
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## 常用命令
 
-## Known Issues
+- `matrix-on-vscode.signin`: 登录
+- `matrix-on-vscode.signout`: 登出
+- `matrix-on-vscode.refreshCourses`: 刷新课程
+- `matrix-on-vscode.refreshCourseAssignments`: 刷新某课程题目
+- `matrix-on-vscode.previewProblem`: 预览题目
+- `matrix-on-vscode.submitCode`: 打开提交面板并提交评测
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## 项目结构
 
-## Release Notes
+- `src/extension.ts`: 扩展入口与命令注册
+- `src/MatrixManager.ts`: 登录/登出流程编排
+- `src/services/`: API 请求与数据归一化
+- `src/sidebar/`: TreeView 节点与数据提供
+- `src/webview/`: 题目预览面板
+- `design/`: 架构与模块设计文档
 
-Users appreciate release notes as you update your extension.
+## 测试与检查
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+```bash
+pnpm run check-types
+pnpm run lint
+pnpm run compile-tests
+```

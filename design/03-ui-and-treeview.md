@@ -17,6 +17,7 @@
 4. **`AssignmentNode` (作业节点)**
    - 叶子节点，展示具体的作业标题。
    - 绑定了 `matrix-on-vscode.previewProblem` 命令，点击即可在右侧打开预览面板。
+   - 支持右键触发 `matrix-on-vscode.submitCode`，直接进入提交面板。
 5. **`InfoNode` (信息/占位节点)**
    - 用于在特殊状态下展示提示信息，如“正在加载...”、“加载失败，点击重试”、“未登录，点击登录”等。支持绑定特定的命令和图标（`ThemeIcon`）。
 
@@ -36,3 +37,38 @@
   - 使用 `vscode.window.createWebviewPanel` 创建面板。
   - 维护了一个 `previewPanels` Map 缓存，键为 `${courseId}:${assignmentId}`。如果用户重复点击同一题目，会直接 `reveal` 已有的面板，而不是重复创建。
   - 面板关闭时，通过 `onDidDispose` 事件监听器清理缓存。
+- **提交入口**：
+  - 预览页顶部提供“提交代码”按钮（command URI）。
+  - 点击后触发 `matrix-on-vscode.submitCode` 命令，进入提交 Webview。
+
+## 3. 提交代码面板 (Submission Webview)
+
+### 核心实现：`src/webview/submissionPanel.ts`
+
+- **入口来源**：
+  - 题目节点右键菜单（`view/item/context`）。
+  - 题目预览页按钮（command URI）。
+
+- **页面元素**：
+  - 语言选择（基于题目详情 `languageOptions`）。
+  - 文件名输入（基于题目详情 `submissionFiles` 默认值）。
+  - 代码输入区（粘贴本地代码）。
+  - 提交按钮、状态日志区、结果展示区。
+  - 结果展示区使用结构化表格：
+    - 阶段概览（阶段/状态/得分/Case 数）。
+    - 数据点详情（每个 case 的状态、耗时、内存、描述、输入输出等）。
+  - 默认隐藏原始 report JSON，避免噪音信息直接暴露。
+
+- **消息通信协议（Webview <-> Extension）**：
+  - Webview -> Extension：`submit`（携带 `language/fileName/code`）。
+  - Extension -> Webview：
+    - `init`：初始化题目信息与可选项。
+    - `busy`：提交流程锁定/解锁。
+    - `status`：提交与轮询进度日志。
+    - `result`：最终结果（verdict、grade、submission id、阶段与数据点表格数据）。
+    - `error`：异常提示。
+
+- **交互策略**：
+  - 提交中禁用输入控件，避免重复点击。
+  - 提交成功后持续轮询，直到评测完成或超时。
+  - 超时时展示“最新可获取结果”，避免面板无反馈。

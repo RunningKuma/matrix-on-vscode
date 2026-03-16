@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import hljs from "highlight.js";
 
 import { globalState } from "../globalState";
 import { CourseService } from "../services/CourseService";
@@ -46,6 +47,7 @@ export async function previewAssignment(
             vscode.ViewColumn.Active,
             {
                 enableScripts: false,
+                enableCommandUris: true,
                 retainContextWhenHidden: true
             }
         );
@@ -58,7 +60,7 @@ export async function previewAssignment(
 
     const title = detail.title ?? assignment.title;
     panel.title = title;
-    panel.webview.html = buildPreviewHtml(panel.webview, title, rendered);
+    panel.webview.html = buildPreviewHtml(panel.webview, title, rendered, detail);
 }
 
 function buildAssignmentMarkdown(detail: AssignmentDetail): string {
@@ -109,8 +111,9 @@ function buildAssignmentMarkdown(detail: AssignmentDetail): string {
             if (attachment.url) {
                 lines.push(`- [${attachment.name}](${attachment.url})`);
             } else if (attachment.code) {
+                const language = resolveAttachmentLanguage(attachment.name, attachment.url);
                 lines.push(`### ${attachment.name}`);
-                lines.push("", "```", attachment.code, "```", "");
+                lines.push("", `\`\`\`${language ?? ""}`, attachment.code, "```", "");
             } else {
                 lines.push(`- ${attachment.name}`);
             }
@@ -129,14 +132,22 @@ async function renderMarkdown(markdown: string): Promise<string> {
     }
 
     if (typeof rendered === "string" && rendered.length > 0) {
-        return rendered;
+        return applySyntaxHighlighting(rendered);
     }
 
     return `<pre>${escapeHtml(markdown)}</pre>`;
 }
 
-function buildPreviewHtml(webview: vscode.Webview, title: string, content: string): string {
+function buildPreviewHtml(webview: vscode.Webview, title: string, content: string, detail: AssignmentDetail): string {
     const escapedTitle = escapeHtml(title || "Matrix Assignment");
+    const submitPayload = encodeURIComponent(JSON.stringify([{
+        id: detail.id,
+        courseId: detail.courseId,
+        title: detail.title,
+        isFinished: detail.isFinished,
+        isFullScore: detail.isFullScore
+    }]));
+    const submitCommandUri = `command:matrix-on-vscode.submitCode?${submitPayload}`;
     const csp = `default-src 'none'; img-src ${webview.cspSource} https: data:; style-src 'unsafe-inline';`;
 
     return `<!DOCTYPE html>
@@ -158,6 +169,20 @@ main {
     max-width: 960px;
     margin: 0 auto;
 }
+.actions {
+    margin-bottom: 1rem;
+}
+.submit-button {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    text-decoration: none;
+}
+.submit-button:hover {
+    background: var(--vscode-button-hoverBackground, var(--vscode-button-background));
+}
 a {
     color: var(--vscode-textLink-foreground);
 }
@@ -169,6 +194,59 @@ pre {
     padding: 0.75rem;
     border-radius: 4px;
     overflow-x: auto;
+}
+pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+}
+.hljs-comment,
+.hljs-quote {
+    color: var(--vscode-descriptionForeground, #6a9955);
+    font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link,
+.hljs-name {
+    color: var(--vscode-symbolIcon-keywordForeground, #c586c0);
+}
+.hljs-string,
+.hljs-title,
+.hljs-attr,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-addition {
+    color: var(--vscode-debugTokenExpression-string, #ce9178);
+}
+.hljs-number,
+.hljs-built_in,
+.hljs-type,
+.hljs-class .hljs-title {
+    color: var(--vscode-symbolIcon-numberForeground, #b5cea8);
+}
+.hljs-variable,
+.hljs-attribute,
+.hljs-tag,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-regexp,
+.hljs-symbol,
+.hljs-bullet {
+    color: var(--vscode-symbolIcon-variableForeground, #9cdcfe);
+}
+.hljs-meta,
+.hljs-doctag {
+    color: var(--vscode-symbolIcon-operatorForeground, #d7ba7d);
+}
+.hljs-deletion {
+    color: var(--vscode-testing-iconFailed, #f14c4c);
 }
 blockquote {
     border-left: 4px solid var(--vscode-editorLineNumber-foreground);
@@ -193,6 +271,9 @@ table th, table td {
 </head>
 <body>
 <main>
+<div class="actions">
+    <a class="submit-button" href="${submitCommandUri}">提交代码</a>
+</div>
 ${content}
 </main>
 </body>
@@ -233,4 +314,158 @@ function escapeHtml(value: string): string {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+}
+
+function applySyntaxHighlighting(content: string): string {
+    const codeBlockPattern = /<pre><code(?: class="([^"]*)")?>([\s\S]*?)<\/code><\/pre>/g;
+
+    return content.replace(codeBlockPattern, (_match, className: string | undefined, encodedCode: string) => {
+        const code = decodeHtml(encodedCode);
+        const hintedLanguage = extractLanguageFromClassName(className);
+
+        try {
+            const highlighted = hintedLanguage && hljs.getLanguage(hintedLanguage)
+                ? hljs.highlight(code, { language: hintedLanguage, ignoreIllegals: true })
+                : hljs.highlightAuto(code);
+
+            const languageClass = highlighted.language ? ` language-${highlighted.language}` : "";
+            return `<pre><code class="hljs${languageClass}">${highlighted.value}</code></pre>`;
+        } catch (error) {
+            return `<pre><code class="hljs">${escapeHtml(code)}</code></pre>`;
+        }
+    });
+}
+
+function extractLanguageFromClassName(className: string | undefined): string | undefined {
+    if (!className) {
+        return undefined;
+    }
+
+    const classes = className.split(/\s+/);
+    for (const item of classes) {
+        if (item.startsWith("language-")) {
+            return normalizeLanguage(item.slice("language-".length));
+        }
+    }
+
+    return undefined;
+}
+
+function resolveAttachmentLanguage(name: string, url: string | undefined): string | undefined {
+    const fromName = inferLanguageFromPath(name);
+    if (fromName) {
+        return fromName;
+    }
+
+    if (!url) {
+        return undefined;
+    }
+
+    const pathPart = url.split(/[?#]/)[0] ?? "";
+    const fileName = pathPart.split("/").pop();
+    if (!fileName) {
+        return undefined;
+    }
+
+    return inferLanguageFromPath(fileName);
+}
+
+function inferLanguageFromPath(pathLike: string): string | undefined {
+    const normalized = pathLike.trim().toLowerCase();
+    if (!normalized) {
+        return undefined;
+    }
+
+    if (normalized === "dockerfile") {
+        return "dockerfile";
+    }
+
+    if (normalized === "makefile") {
+        return "makefile";
+    }
+
+    const extension = normalized.split(".").pop();
+    if (!extension || extension === normalized) {
+        return undefined;
+    }
+
+    const map: Record<string, string> = {
+        js: "javascript",
+        jsx: "javascript",
+        mjs: "javascript",
+        cjs: "javascript",
+        ts: "typescript",
+        tsx: "typescript",
+        py: "python",
+        java: "java",
+        kt: "kotlin",
+        kts: "kotlin",
+        go: "go",
+        rs: "rust",
+        c: "c",
+        h: "c",
+        cc: "cpp",
+        cpp: "cpp",
+        cxx: "cpp",
+        hh: "cpp",
+        hpp: "cpp",
+        hxx: "cpp",
+        cs: "csharp",
+        php: "php",
+        rb: "ruby",
+        swift: "swift",
+        lua: "lua",
+        pl: "perl",
+        sh: "bash",
+        bash: "bash",
+        zsh: "bash",
+        ps1: "powershell",
+        sql: "sql",
+        json: "json",
+        yml: "yaml",
+        yaml: "yaml",
+        toml: "toml",
+        xml: "xml",
+        html: "xml",
+        xhtml: "xml",
+        css: "css",
+        scss: "scss",
+        less: "less",
+        md: "markdown",
+        ini: "ini",
+        properties: "ini"
+    };
+
+    return map[extension];
+}
+
+function normalizeLanguage(value: string): string {
+    const normalized = value.toLowerCase();
+
+    const aliases: Record<string, string> = {
+        js: "javascript",
+        jsx: "javascript",
+        ts: "typescript",
+        tsx: "typescript",
+        py: "python",
+        sh: "bash",
+        shell: "bash",
+        yml: "yaml",
+        md: "markdown",
+        cs: "csharp"
+    };
+
+    return aliases[normalized] ?? normalized;
+}
+
+function decodeHtml(value: string): string {
+    return value
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#39;/g, "'")
+        .replace(/&#x27;/g, "'")
+        .replace(/&#(\d+);/g, (_match, code: string) => String.fromCodePoint(Number(code)))
+        .replace(/&#x([\da-fA-F]+);/g, (_match, code: string) => String.fromCodePoint(parseInt(code, 16)))
+        .replace(/&amp;/g, "&");
 }
